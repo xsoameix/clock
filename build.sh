@@ -1,51 +1,31 @@
 #!/bin/bash
-set_vma() {
-    arm-linux-gnueabi-objcopy --change-section-vma ".text=$1" $2 2> /dev/null
+gcc() {
+    arm-linux-gnueabi-gcc -nostdlib -T <(m4 -D_start=$1 link.ld) -o "${@:2}"
+    arm-linux-gnueabi-objcopy -O binary -j '.text' $2 "${2}.text"
 }
-get_sym() {
-    echo "0x$(arm-linux-gnueabi-readelf -s $2 | grep $1 | awk '{print $2}')"
+gen() {
+    gcc $1 $2 -Xlinker -R -Xlinker $3 -x assembler <(m4 -D_start=$4 patch.s)
 }
-add_sym() {
-    arm-linux-gnueabi-objcopy --add-symbol \
-        "$1=.text:$(($2-$3)),function,global" $4
-}
-# english version
-jump_base=0x000005e8
+clock_patch=0x000005e8
+# free space >= 10000 bytes
 # english:  0x00380000
 # japanese: 0x002aa000
-patch_base=0x000aa000
+clock_start=0x002aa000
 # english:  0x0002fb06
 # japanese: 0x0002f7c0
-nop_base=0x0002f7c0 # To disable the error code text write C046C046 (nop x 2)
-tjump_base=0x0002f294
-arm-linux-gnueabi-gcc -S -o cpatch.s cpatch.c
-arm-linux-gnueabi-as -o cpatch.o cpatch.s
-arm-linux-gnueabi-as -o patch_caller.o patch_caller.s
-arm-linux-gnueabi-as -o jump.o jump.s
-arm-linux-gnueabi-as --defsym jump_base=$jump_base -o patch.o patch.s
-arm-linux-gnueabi-as -o nop.o nop.s
-arm-linux-gnueabi-as -o tjump.o tjump.s
-arm-linux-gnueabi-ld -e 0 -o patch_caller patch_caller.o cpatch.o
-set_vma $patch_base patch_caller
-add_sym patch_start $(get_sym patch_start patch_caller) $jump_base jump.o
-add_sym timer_start $(get_sym patch_main patch_caller) $tjump_base tjump.o
-arm-linux-gnueabi-ld -e 0 -o jump jump.o
-arm-linux-gnueabi-ld -e 0 -o patch -R jump.o patch.o
-arm-linux-gnueabi-ld -e 0 -o tjump tjump.o
-set_vma $jump_base jump # optional
-set_vma $tjump_base tjump # optional
-arm-linux-gnueabi-objcopy -O binary patch_caller patch_caller.text
-arm-linux-gnueabi-objcopy -O binary jump jump.text
-arm-linux-gnueabi-objcopy -O binary patch patch.text
-arm-linux-gnueabi-objcopy -O binary nop.o nop.text
-arm-linux-gnueabi-objcopy -O binary tjump.o tjump.text
+clock_nop=0x0002f7c0 # To disable the error code text write C046C046 (nop x 2)
+timer_patch=0x0002f294
+gcc $clock_start build/clock       clock_start.s clock.c
+gcc $clock_nop   build/clock_nop   clock_nop.s
+gen $clock_patch build/clock_patch build/clock clock_start
+gen $timer_patch build/timer_patch build/clock clock_main
+
 #dir="$HOME/VirtualBox VMs/shared/Pokemon/english"
 dir="$HOME/VirtualBox VMs/shared/Pokemon/japanese"
 #bin="$dir/Pokemon Emerald-patched.gba"
 #cp "$dir/Pokemon Emerald.gba" "$bin"
 bin="$dir/ポケットモンスター エメラルド-patched.gba"
 cp "$dir/ポケットモンスター エメラルド.gba" "$bin"
-./main "$bin" jump.text $jump_base
-./main "$bin" patch_caller.text $patch_base
-#./main "$bin" patch.text $patch_base
-./main "$bin" nop.text $nop_base
+./main "$bin" $clock_start build/clock.text
+./main "$bin" $clock_nop   build/clock_nop.text
+./main "$bin" $clock_patch build/clock_patch.text

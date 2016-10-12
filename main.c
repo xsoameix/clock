@@ -16,8 +16,8 @@ main(int argc, char ** argv) {
   int ret = 1;
   if (argc != 4) return fprintf(stderr, "Require 3 arguments.\n"), ret;
   const char * bin_str = argv[1];
-  const char * pat_str = argv[2];
-  const char * addr_str = argv[3];
+  const char * addr_str = argv[2];
+  const char * pat_str = argv[3];
   char * addr_str_end;
   long addr = strtol(addr_str, &addr_str_end, 0);
   if (!addr_str[0] || addr_str_end != addr_str + strlen(addr_str) || addr < 0)

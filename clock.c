@@ -3,7 +3,7 @@
 #define thumb __attribute__((target("thumb")))
 
 void thumb
-patch_main(void) {
+clock_main(void) {
   // english:  0x03005d90
   // japanese: 0x03005af0
   void * player_data = * (void **) 0x03005af0;

@@ -1,8 +1,5 @@
 /main
-/clock
-/timer
-*.o
-*.text
+/build
 
 # vim
 *.swp
