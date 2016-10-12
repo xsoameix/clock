@@ -1,0 +1,5 @@
+/main
+/clock
+/timer
+*.o
+*.text
