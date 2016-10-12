@@ -3,3 +3,6 @@
 /timer
 *.o
 *.text
+
+# vim
+*.swp
