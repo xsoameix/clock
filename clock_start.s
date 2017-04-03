@@ -4,10 +4,12 @@
     .thumb_func
     .globl  clock_start
 clock_start:
-    push    {r2-r7,lr}
+    push    {r3-r7, lr}
     bl      clock_main
-    ldr     r0, .Lsum_game_off
-    ldrh    r1, [r0] @ sum game
-    pop     {r2-r7,pc}
-.Lsum_game_off:
-    .word 0x04000130
+    ldr     r0, .Lsum_val
+    ldrh    r1, [r0]      @ sum val
+    ldr     r2, .Lsum_xor @ sum xor
+    pop     {r3-r7, pc}
+    .align  2
+.Lsum_val: .word 0x04000130
+.Lsum_xor: .word 0x000003ff

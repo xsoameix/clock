@@ -4,9 +4,11 @@
 
 void thumb
 clock_main(void) {
-  // english:  0x03005d90
-  // japanese: 0x03005af0
-  void * player_data = * (void **) 0x03005af0;
+#if GC == 1
+  void * player_data = * (void **) PLAYER_DATA;
+#else
+  void * player_data = (void *) PLAYER_DATA;
+#endif
   int8_t * sec = (int8_t *) (player_data + 0x11);
   int16_t * day = (int16_t *) (player_data + 0x98);
   int8_t * hour = (int8_t *) (player_data + 0x9a);
@@ -21,5 +23,5 @@ clock_main(void) {
   * min = 59;
   if (* hour > 0) { (* hour)--; return; }
   * hour = 23;
-  (* day)++; // 0: 2000-01-01, 1: 2000-01-02, ...
+  (* day)--; // 0: 2000-01-01, -1: 2000-01-02, ...
 }
