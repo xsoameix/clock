@@ -13,6 +13,9 @@ jmp() {
     # $4 = the name of entrance
     gcc $1 $2 -Xlinker -R -Xlinker $3 -x assembler <(m4 -D_start=$4 patch.s)
 }
+lps() {
+    dd if="$3" of="$1" seek=$(($2)) obs=1 conv=notrunc status=none 2>/dev/null
+}
 gba() {
     # $1 = the gba file
     # $2 = whether the game use GC
@@ -33,11 +36,11 @@ gba() {
     local src="${1}"
     local dst="${1%.*}-clock.gba"
     cp "$src" "$dst"
-    ./main "$dst" $4 build/clock_start.text
-    ./main "$dst" $5 build/clock_nop.text
-    ./main "$dst" $6 build/clock_jmp.text
-    #./main "$dst" $7 build/timer_nop.text
-    #./main "$dst" $8 build/timer_jmp.text
+    lps "$dst" $4 build/clock_start.text
+    lps "$dst" $5 build/clock_nop.text
+    lps "$dst" $6 build/clock_jmp.text
+    #lps "$dst" $7 build/timer_nop.text
+    #lps "$dst" $8 build/timer_jmp.text
 }
 ver() {
     # Reference: https://github.com/roytam1/rtoss/blob/master/PokemonHackSourceCode/PokemonMemHack/PokemonMemHackCore.cpp
